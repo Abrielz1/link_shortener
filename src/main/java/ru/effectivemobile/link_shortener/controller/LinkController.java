@@ -18,8 +18,8 @@ import ru.effectivemobile.link_shortener.dto.NewShortLink;
 import ru.effectivemobile.link_shortener.dto.ShortLink;
 import ru.effectivemobile.link_shortener.dto.UpdateLink;
 import ru.effectivemobile.link_shortener.service.LinkService;
-import ru.effectivemobile.util.Create;
-import ru.effectivemobile.util.Update;
+import ru.effectivemobile.link_shortener.util.Create;
+import ru.effectivemobile.link_shortener.util.Update;
 
 @Slf4j
 @Validated

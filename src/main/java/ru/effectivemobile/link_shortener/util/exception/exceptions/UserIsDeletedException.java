@@ -1,4 +1,4 @@
-package ru.effectivemobile.util.exception.exceptions;
+package ru.effectivemobile.link_shortener.util.exception.exceptions;
 
 public class UserIsDeletedException extends RuntimeException {
 

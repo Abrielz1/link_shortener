@@ -1,4 +1,4 @@
-package ru.effectivemobile.util.exception.handler;
+package ru.effectivemobile.link_shortener.util.exception.handler;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
