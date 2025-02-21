@@ -73,7 +73,7 @@ public class LinkServiceImpl implements LinkService {
         return linkRepository.getByShortLink(link)
                 .map(Link::getOriginalLink)
                 .orElseThrow(() -> {
-            log.info("No link!");
+            log.warn("No link!");
             return new ObjectNotFoundException("No link!");
         });
     }
