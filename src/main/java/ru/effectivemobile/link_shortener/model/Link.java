@@ -17,7 +17,7 @@ import org.hibernate.proxy.HibernateProxy;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-@Table
+@Table(name = "links")
 @Setter
 @Getter
 @Entity

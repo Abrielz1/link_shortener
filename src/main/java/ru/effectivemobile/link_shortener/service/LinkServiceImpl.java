@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import ru.effectivemobile.link_shortener.dto.FullLink;
 import ru.effectivemobile.link_shortener.dto.ExistsShortLink;
 import ru.effectivemobile.link_shortener.dto.ShortLink;
-import ru.effectivemobile.link_shortener.dto.UpdateLink;
 import ru.effectivemobile.link_shortener.model.Link;
 import ru.effectivemobile.link_shortener.repository.LinkRepository;
 import ru.effectivemobile.link_shortener.util.exception.exceptions.BadRequestException;
@@ -23,9 +22,9 @@ public class LinkServiceImpl implements LinkService {
     private final LinkRepository linkRepository;
 
     @Override
-    public FullLink getFullLink(ExistsShortLink shortLink) {
+    public String getFullLink(ExistsShortLink shortLink) {
 
-        return null;
+        return this.linkFinder(shortLink.shortLink());
     }
 
     @Override
@@ -57,12 +56,6 @@ public class LinkServiceImpl implements LinkService {
         return new ShortLink(shortLink);
     }
 
-    @Override
-    public ShortLink updateShortLink(ExistsShortLink shortLink, UpdateLink fullLink) {
-
-        return null;
-    }
-
     private String convertByteArrayToHexString(byte[] arrayBytes) {
 
         var stringBuffer = new StringBuilder();
@@ -74,4 +67,16 @@ public class LinkServiceImpl implements LinkService {
 
         return stringBuffer.toString();
     }
+
+    private String linkFinder(String link) {
+
+        return linkRepository.getByShortLink(link)
+                .map(Link::getOriginalLink)
+                .orElseThrow(() -> {
+            log.info("No link!");
+            return new ObjectNotFoundException("No link!");
+        });
+    }
 }
+
+

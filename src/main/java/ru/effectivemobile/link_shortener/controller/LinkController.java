@@ -8,18 +8,16 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
 import ru.effectivemobile.link_shortener.dto.FullLink;
 import ru.effectivemobile.link_shortener.dto.ExistsShortLink;
 import ru.effectivemobile.link_shortener.dto.ShortLink;
-import ru.effectivemobile.link_shortener.dto.UpdateLink;
 import ru.effectivemobile.link_shortener.service.LinkService;
 import ru.effectivemobile.link_shortener.util.Create;
-import ru.effectivemobile.link_shortener.util.Update;
 
 @Slf4j
 @Validated
@@ -32,9 +30,9 @@ public class LinkController {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public FullLink getFullLink(@NotBlank @PathVariable(name = "id") ExistsShortLink shortLink) {
+    public RedirectView getFullLink(@NotBlank @PathVariable(name = "id") ExistsShortLink shortLink) {
 
-       return linkService.getFullLink(shortLink);
+       return new RedirectView(linkService.getFullLink(shortLink));
     }
 
     @PostMapping
@@ -42,13 +40,5 @@ public class LinkController {
     public ShortLink createShortLink(@Validated(Create.class)@RequestBody FullLink fullLink) {
 
         return linkService.createShortLink(fullLink);
-    }
-
-    @PutMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ShortLink updateShortLink(@NotBlank @PathVariable(name = "id") ExistsShortLink shortLink,
-                                     @Validated(Update.class)@RequestBody UpdateLink fullLink) {
-
-        return linkService.updateShortLink(shortLink, fullLink);
     }
 }
