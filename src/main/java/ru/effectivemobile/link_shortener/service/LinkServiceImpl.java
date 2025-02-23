@@ -2,6 +2,7 @@ package ru.effectivemobile.link_shortener.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.effectivemobile.link_shortener.dto.FullLink;
 import ru.effectivemobile.link_shortener.dto.ExistsShortLink;
@@ -13,6 +14,8 @@ import ru.effectivemobile.link_shortener.util.exception.exceptions.ObjectNotFoun
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -70,12 +73,28 @@ public class LinkServiceImpl implements LinkService {
 
     private String linkFinder(String link) {
 
-        return linkRepository.getByShortLink(link)
-                .map(Link::getOriginalLink)
+        Link link1 = linkRepository.getByShortLink(link)
                 .orElseThrow(() -> {
+                    log.warn("No link!!");
+                    return new ObjectNotFoundException("No link!!!");
+                });
+
+        if (link1.getExpiredAt().isBefore(LocalDateTime.now()) && link1.getExpiredAt() != null ) {
             log.warn("No link!");
-            return new ObjectNotFoundException("No link!");
-        });
+            throw new ObjectNotFoundException("No link!");
+        }
+
+        return link1.getOriginalLink();
+    }
+
+    @Scheduled(fixedRate = 60, timeUnit = TimeUnit.MINUTES)
+    private void cleaner() {
+
+        log.info("DeadLinks will be wiped now!");
+
+        linkRepository.deleteOnSchedule(LocalDateTime.now());
+
+        log.info("DeadLinks are wiped now!");
     }
 }
 
