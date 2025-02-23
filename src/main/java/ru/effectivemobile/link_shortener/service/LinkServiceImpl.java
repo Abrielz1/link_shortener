@@ -20,6 +20,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @Service
@@ -30,10 +31,11 @@ public class LinkServiceImpl implements LinkService {
 
     private final LinkRepository linkRepository;
 
+    private static final ReentrantLock lock = new ReentrantLock();
+
     @Override
     @Cacheable("databaseEntities")
     public String getFullLink(ExistsShortLink shortLink) {
-
         return this.linkFinder(shortLink.shortLink());
     }
 
@@ -41,7 +43,6 @@ public class LinkServiceImpl implements LinkService {
     @CacheEvict(value = "databaseEntities")
     @Transactional
     public ShortLink createShortLink(FullLink fullLink) {
-
         if (fullLink == null || fullLink.originalLink() == null) {
             throw  new ObjectNotFoundException("No link to shred!");
         }
@@ -69,7 +70,6 @@ public class LinkServiceImpl implements LinkService {
     }
 
     private String convertByteArrayToHexString(byte[] arrayBytes) {
-
         var stringBuffer = new StringBuilder();
         for (byte arrayByte : arrayBytes) {
             stringBuffer.append(Integer.toString((arrayByte & 0xff) + 0x100, 16)
@@ -80,7 +80,6 @@ public class LinkServiceImpl implements LinkService {
     }
 
     private String linkFinder(String link) {
-
         Link link1 = linkRepository.getByShortLink(link)
                 .orElseThrow(() -> {
                     log.warn("No link!!");
@@ -97,9 +96,13 @@ public class LinkServiceImpl implements LinkService {
 
     @Scheduled(fixedRate = 60, timeUnit = TimeUnit.MINUTES)
     private void cleaner() {
-
+        lock.lock();
         log.info("DeadLinks will be wiped now!");
-        linkRepository.deleteOnSchedule(LocalDateTime.now());
+        try {
+            linkRepository.deleteOnSchedule(LocalDateTime.now());
+        } finally {
+            lock.unlock();
+        }
         log.info("DeadLinks are wiped now!");
     }
 }

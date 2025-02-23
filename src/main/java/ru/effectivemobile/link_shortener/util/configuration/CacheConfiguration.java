@@ -19,7 +19,6 @@ public class CacheConfiguration {
     @Bean
     public CacheManager redisCacheManager(AppCacheProperties appCacheProperties,
                                           LettuceConnectionFactory lettuceConnectionFactory) {
-
         var defaultConfig = RedisCacheConfiguration.defaultCacheConfig();
         Map<String, RedisCacheConfiguration> redisCacheConfigurationMap = new HashMap<>();
 

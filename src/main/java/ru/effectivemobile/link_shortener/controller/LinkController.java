@@ -31,14 +31,12 @@ public class LinkController {
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public RedirectView getFullLink(@NotBlank @PathVariable(name = "id") ExistsShortLink shortLink) {
-
        return new RedirectView(linkService.getFullLink(shortLink));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ShortLink createShortLink(@Validated(Create.class)@RequestBody FullLink fullLink) {
-
         return linkService.createShortLink(fullLink);
     }
 }

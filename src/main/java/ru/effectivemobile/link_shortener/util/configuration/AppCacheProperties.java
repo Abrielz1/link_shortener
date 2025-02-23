@@ -20,7 +20,6 @@ public class AppCacheProperties {
 
     @Data
     public static class CacheProperties {
-
         private Duration expiry = Duration.ofHours(1);
     }
 
