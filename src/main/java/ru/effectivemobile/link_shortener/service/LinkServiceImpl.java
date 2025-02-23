@@ -2,8 +2,12 @@ package ru.effectivemobile.link_shortener.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.effectivemobile.link_shortener.dto.FullLink;
 import ru.effectivemobile.link_shortener.dto.ExistsShortLink;
 import ru.effectivemobile.link_shortener.dto.ShortLink;
@@ -19,18 +23,23 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
+@CacheConfig(cacheManager = "redisCacheManager")
+@Transactional
 @RequiredArgsConstructor
 public class LinkServiceImpl implements LinkService {
 
     private final LinkRepository linkRepository;
 
     @Override
+    @Cacheable("databaseEntities")
     public String getFullLink(ExistsShortLink shortLink) {
 
         return this.linkFinder(shortLink.shortLink());
     }
 
     @Override
+    @CacheEvict(value = "databaseEntities")
+    @Transactional
     public ShortLink createShortLink(FullLink fullLink) {
 
         if (fullLink == null || fullLink.originalLink() == null) {
@@ -62,7 +71,6 @@ public class LinkServiceImpl implements LinkService {
     private String convertByteArrayToHexString(byte[] arrayBytes) {
 
         var stringBuffer = new StringBuilder();
-
         for (byte arrayByte : arrayBytes) {
             stringBuffer.append(Integer.toString((arrayByte & 0xff) + 0x100, 16)
                     .substring(1));
@@ -91,9 +99,7 @@ public class LinkServiceImpl implements LinkService {
     private void cleaner() {
 
         log.info("DeadLinks will be wiped now!");
-
         linkRepository.deleteOnSchedule(LocalDateTime.now());
-
         log.info("DeadLinks are wiped now!");
     }
 }
