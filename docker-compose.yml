@@ -4,11 +4,11 @@ services:
     ports:
       - "6379:6379"
 
-  link_shortener_db:
+  link_db:
     image: postgres:14.6-alpine
     container_name: link_shortener_db
     ports:
-      - "6542:5432"
+      - "5432:5432"
     environment:
       - POSTGRES_DB=link_shortener_db
       - POSTGRES_USER=root
@@ -21,7 +21,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://link_shortener_db:5432/link_shortener_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://link_db:5432/link_shortener_db
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
 
