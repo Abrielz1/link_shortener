@@ -6,7 +6,7 @@ services:
 
   link_db:
     image: postgres:14.6-alpine
-    container_name: link_shortener_db
+    container_name: link_db
     ports:
       - "5432:5432"
     environment:
@@ -31,4 +31,4 @@ services:
 
     depends_on:
       - redis
-      - link_shortener_db
+      - link_db

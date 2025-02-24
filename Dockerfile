@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM amazoncorretto:17-al2-full
 LABEL authors="Abriel"
 WORKDIR /app
 COPY target/link_shortener-0.0.1-SNAPSHOT.jar link_shortener.jar

@@ -16,17 +16,6 @@ spring:
       hibernate:
         format_sql: true
 
-#  app:
-#    cache:
-#      cache-names:
-#        - databaseEntities
-#        - databaseEntityByName
-#      cachePropertiesMap:
-#          databaseEntities:
-#            expiry: 10m
-#          databaseEntityByName:
-#            expiry: 10m
-
   datasource:
     url: jdbc:postgresql://localhost:5432/link_shortener_db
     username: root
