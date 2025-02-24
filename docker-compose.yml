@@ -3,6 +3,17 @@ services:
     image: redis:7.0.12
     ports:
       - "6379:6379"
+
+  ewm-db:
+    image: postgres:14.6-alpine
+    container_name: ewm_main_db
+    ports:
+      - "6542:5432"
+    environment:
+      - POSTGRES_DB=link_shortener_db
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+
   link_shortener:
     image: link_shortener
     build:
@@ -20,3 +31,4 @@ services:
 
     depends_on:
       - redis
+      - ewm-db
