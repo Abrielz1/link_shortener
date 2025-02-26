@@ -9,10 +9,20 @@ services:
     container_name: link_db
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Mount the named volume here
+      -
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
     environment:
       - POSTGRES_DB=link_shortener_db
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
+
 
   link_shortener:
     image: link_shortener
@@ -28,7 +38,13 @@ services:
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_LOCATIONS: classpath:db/migration
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_REDIS_HOST: redis
+      APP_URL_TTL: 3600
 
     depends_on:
       - redis
       - link_db
+
+volumes:
+  postgres_data:  # Define the named volume
+    driver: local  # Specify the driver (optional but explicit)
