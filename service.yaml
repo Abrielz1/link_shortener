@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: link_shortener-service
+spec:
+  type: LoadBalancer # Use NodePort if LoadBalancer is not available
+  selector:
+    app: link_shortener
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

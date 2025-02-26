@@ -2,7 +2,12 @@ package ru.effectivemobile.link_shortener.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.effectivemobile.link_shortener.dto.FullLink;
 import ru.effectivemobile.link_shortener.dto.ExistsShortLink;
 import ru.effectivemobile.link_shortener.dto.ShortLink;
@@ -13,23 +18,31 @@ import ru.effectivemobile.link_shortener.util.exception.exceptions.ObjectNotFoun
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @Service
+@CacheConfig(cacheManager = "redisCacheManager")
+@Transactional
 @RequiredArgsConstructor
 public class LinkServiceImpl implements LinkService {
 
     private final LinkRepository linkRepository;
 
-    @Override
-    public String getFullLink(ExistsShortLink shortLink) {
+    private static final ReentrantLock lock = new ReentrantLock();
 
+    @Override
+    @Cacheable("databaseEntities")
+    public String getFullLink(ExistsShortLink shortLink) {
         return this.linkFinder(shortLink.shortLink());
     }
 
     @Override
+    @CacheEvict(value = "databaseEntities")
+    @Transactional
     public ShortLink createShortLink(FullLink fullLink) {
-
         if (fullLink == null || fullLink.originalLink() == null) {
             throw  new ObjectNotFoundException("No link to shred!");
         }
@@ -57,9 +70,7 @@ public class LinkServiceImpl implements LinkService {
     }
 
     private String convertByteArrayToHexString(byte[] arrayBytes) {
-
         var stringBuffer = new StringBuilder();
-
         for (byte arrayByte : arrayBytes) {
             stringBuffer.append(Integer.toString((arrayByte & 0xff) + 0x100, 16)
                     .substring(1));
@@ -69,13 +80,30 @@ public class LinkServiceImpl implements LinkService {
     }
 
     private String linkFinder(String link) {
-
-        return linkRepository.getByShortLink(link)
-                .map(Link::getOriginalLink)
+        Link link1 = linkRepository.getByShortLink(link)
                 .orElseThrow(() -> {
+                    log.warn("No link!!");
+                    return new ObjectNotFoundException("No link!!!");
+                });
+
+        if (link1.getExpiredAt().isBefore(LocalDateTime.now()) && link1.getExpiredAt() != null ) {
             log.warn("No link!");
-            return new ObjectNotFoundException("No link!");
-        });
+            throw new ObjectNotFoundException("No link!");
+        }
+
+        return link1.getOriginalLink();
+    }
+
+    @Scheduled(fixedRate = 60, timeUnit = TimeUnit.MINUTES)
+    private void cleaner() {
+        lock.lock();
+        log.info("DeadLinks will be wiped now!");
+        try {
+            linkRepository.deleteOnSchedule(LocalDateTime.now());
+        } finally {
+            lock.unlock();
+        }
+        log.info("DeadLinks are wiped now!");
     }
 }
 
