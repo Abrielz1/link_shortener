@@ -43,8 +43,20 @@ public class LinkServiceImpl implements LinkService {
     @CacheEvict(value = "databaseEntities")
     @Transactional
     public ShortLink createShortLink(FullLink fullLink) {
+
         if (fullLink == null || fullLink.originalLink() == null) {
             throw  new ObjectNotFoundException("No link to shred!");
+        }
+
+        if (linkRepository.existsByOriginalLink(fullLink.originalLink())) {
+
+            String shortLink = linkRepository.getByOriginalLink(fullLink.originalLink())
+                    .map(Link::getShortLink).orElseThrow(() -> {
+                log.warn("No link!!");
+                return new ObjectNotFoundException("No link!!!");
+            });
+
+            return new ShortLink(shortLink);
         }
 
         Link link = new Link();

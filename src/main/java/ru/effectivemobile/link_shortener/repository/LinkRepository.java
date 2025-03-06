@@ -11,6 +11,14 @@ import java.util.Optional;
 
 @Repository
 public interface LinkRepository extends JpaRepository<Link, Long> {
+    boolean existsByOriginalLink(String originalLink);
+
+    @Query(name = """
+            SELECT *
+            FROM links
+            WHERE original_link = : originalLink            
+            """, nativeQuery = true)
+    Optional<Link> getByOriginalLink(@Param("originalLink") String originalLink);
 
     @Query(value = """
         SELECT *
