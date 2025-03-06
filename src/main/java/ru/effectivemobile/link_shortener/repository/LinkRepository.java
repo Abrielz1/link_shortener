@@ -20,7 +20,7 @@ public interface LinkRepository extends JpaRepository<Link, Long> {
             SELECT *
             FROM links
             WHERE original_link = : originalLink
-            """, nativeQuery = true)
+                  """, nativeQuery = true)
     Optional<Link> getByOriginalLink(@Param("originalLink") String originalLink);
 
     @Lock(LockModeType.OPTIMISTIC)
@@ -28,7 +28,7 @@ public interface LinkRepository extends JpaRepository<Link, Long> {
         SELECT *
         FROM links
         WHERE short_link = :shortLink
-                   """, nativeQuery = true)
+                  """, nativeQuery = true)
     Optional<Link> getByShortLink(@Param("shortLink") String shortLink);
 
     @Modifying
@@ -37,6 +37,15 @@ public interface LinkRepository extends JpaRepository<Link, Long> {
         DELETE
         FROM links
         WHERE expired_at <= :itsTimeToDie
+                  """, nativeQuery = true)
+    void deleteOnSchedule(@Param("itsTimeToDie") LocalDateTime itsTimeToDie);
+
+    @Modifying
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(value = """
+        DELETE
+        FROM links
+        WHERE created_at <= :itsTimeToDie
                    """, nativeQuery = true)
-    void deleteOnSchedule(@Param("itsTimeToDie")LocalDateTime itsTimeToDie);
+    void killYearOldLinks(@Param("itsTimeToDie") LocalDateTime itsTimeToDie);
 }

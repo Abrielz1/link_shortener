@@ -1,5 +1,6 @@
 package ru.effectivemobile.link_shortener.service;
 
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheConfig;
@@ -49,14 +50,13 @@ public class LinkServiceImpl implements LinkService {
         }
 
         if (linkRepository.existsByOriginalLink(fullLink.originalLink())) {
-
-            String shortLink = linkRepository.getByOriginalLink(fullLink.originalLink())
-                    .map(Link::getShortLink).orElseThrow(() -> {
-                log.warn("No link!!");
-                return new ObjectNotFoundException("No link!!!");
-            });
-
-            return new ShortLink(shortLink);
+            try {
+            return linkRepository.getByOriginalLink(fullLink.originalLink())
+                    .map(link -> new ShortLink(link.getShortLink()))
+                   .orElseThrow(() -> new ObjectNotFoundException("No link!!!"));
+            } catch (OptimisticLockException e) {
+                throw new ObjectNotFoundException("Конфликт данных: запись была изменена другим пользователем");
+            }
         }
 
         Link link = new Link();
@@ -92,14 +92,19 @@ public class LinkServiceImpl implements LinkService {
     }
 
     private String linkFinder(String link) {
-        Link link1 = linkRepository.getByShortLink(link)
-                .orElseThrow(() -> {
-                    log.warn("No link!!");
-                    return new ObjectNotFoundException("No link!!!");
-                });
+        Link link1;
+        try {
+            link1 = linkRepository.getByShortLink(link)
+                    .orElseThrow(() -> {
+                        log.warn("No link!!");
+                        return new ObjectNotFoundException("No link!!!");
+                    });
+        } catch (OptimisticLockException e) {
+            throw new ObjectNotFoundException("Конфликт данных: запись была изменена другим пользователем");
+        }
+
 
         if (link1.getExpiredAt().isBefore(LocalDateTime.now()) && link1.getExpiredAt() != null ) {
-            log.warn("No link!");
             throw new ObjectNotFoundException("No link!");
         }
 
@@ -107,11 +112,23 @@ public class LinkServiceImpl implements LinkService {
     }
 
     @Scheduled(fixedRate = 60, timeUnit = TimeUnit.MINUTES)
-    private void cleaner() {
+    private void cleanerTtl() {
         lock.lock();
         log.info("DeadLinks will be wiped now!");
         try {
             linkRepository.deleteOnSchedule(LocalDateTime.now());
+        } finally {
+            lock.unlock();
+        }
+        log.info("DeadLinks are wiped now!");
+    }
+
+    @Scheduled(fixedRate = 360, timeUnit = TimeUnit.DAYS)
+    private void cleanerOldLinks() {
+        lock.lock();
+        log.info("OldLinks will be wiped now!");
+        try {
+            linkRepository.killYearOldLinks(LocalDateTime.now().minusYears(1));
         } finally {
             lock.unlock();
         }

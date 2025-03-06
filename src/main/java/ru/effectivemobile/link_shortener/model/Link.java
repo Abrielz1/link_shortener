@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,7 +34,7 @@ public class Link {
             sequenceName = "link_sequence",
             initialValue = 1, allocationSize = 50)
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    Long id;
+    private Long id;
 
     @Column(name = "short_link", unique = true, nullable = false)
     private String shortLink;
@@ -46,6 +47,9 @@ public class Link {
 
     @Column(name = "expired_at", unique = true, nullable = true)
     private LocalDateTime expiredAt;
+
+    @Version
+    private long version;
 
     @Override
     public final boolean equals(Object o) {
