@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: link_shortener-app
+  name: link-shortener-app
   labels:
-    app: link_shortener
+    app: link-shortener
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: link_shortener
+      app: link-shortener
   template:
     metadata:
       labels:
-        app: link_shortener
+        app: link-shortener
     spec:
       containers:
-        - name: link_shortener
-          image: link_shortener:latest
+        - name: link-shortener
+          image: link-shortener:latest
           ports:
             - containerPort: 8080
           env:

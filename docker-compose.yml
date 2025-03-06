@@ -24,8 +24,8 @@ services:
       - POSTGRES_PASSWORD=root
 
 
-  link_shortener:
-    image: link_shortener
+  link-shortener:
+    image: link-shortener
     build:
       context: .
     ports:
