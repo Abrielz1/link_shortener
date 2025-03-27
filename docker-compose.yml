@@ -1,41 +1,50 @@
 services:
-  postgres:
-    image: postgres:12.3
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=link_shortener_db
   redis:
     image: redis:7.0.12
     ports:
       - "6379:6379"
 
-#services:
-#  redis:
-#    image: redis:7.0.12
-#    ports:
-#      - "6379:6379"
-#  link_shortener:
-#    image: link_shortener
-#    build:
-#      context: .
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-container:5432/link_shortener
-#      SPRING_DATASOURCE_USERNAME: root
-#      SPRING_DATASOURCE_PASSWORD: root
-#
-#      hikari:
-#        schema: public
-#        connection-init-sql: CREATE SCHEMA IF NOT EXISTS user_schema
-#        connection-timeout: 10000
-#
-#      SPRING_FLYWAY_ENABLED: "true"
-#      SPRING_FLYWAY_LOCATIONS: classpath:db/migration
-#      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
-#
-#    depends_on:
-#      - redis
+  link_db:
+    image: postgres:14.6-alpine
+    container_name: link_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Mount the named volume here
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    environment:
+      - POSTGRES_DB=link_shortener_db
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+
+
+  link-shortener:
+    image: link-shortener
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://link_db:5432/link_shortener_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_REDIS_HOST: redis
+      APP_URL_TTL: 3600
+
+    depends_on:
+      - redis
+      - link_db
+
+volumes:
+  postgres_data:  # Define the named volume
+    driver: local  # Specify the driver (optional but explicit)

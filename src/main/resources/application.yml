@@ -17,7 +17,7 @@ spring:
         format_sql: true
 
   datasource:
-    url: jdbc:postgresql://postgres-container:5432/link_shortener_db
+    url: jdbc:postgresql://localhost:5432/link_shortener_db
     username: root
     password: root
     hikari:

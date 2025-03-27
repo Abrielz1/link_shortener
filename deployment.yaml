@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: link-shortener-app
+  labels:
+    app: link-shortener
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: link-shortener
+  template:
+    metadata:
+      labels:
+        app: link-shortener
+    spec:
+      containers:
+        - name: link-shortener
+          image: link-shortener:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://url-shortener-db:5432/link_shortener_db
+            - name: SPRING_DATASOURCE_USERNAME
+              value: root
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: root
+            - name: SPRING_REDIS_HOST
+              value: link_shortener-redis
+            - name: APP_URL_TTL
+              value: "3600"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
